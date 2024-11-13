@@ -3,11 +3,11 @@
 # Install dependencies
 npm install
 
-# Clean dist directory
-npm run clean
+# Create dist directory if it doesn't exist
+mkdir -p dist
 
 # Build TypeScript
 npm run build
 
-# Make start script executable
-chmod +x dist/server.js
+# Ensure proper permissions
+chmod +x dist/server.js || true

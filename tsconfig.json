@@ -13,10 +13,8 @@
     "resolveJsonModule": true,
     "types": ["node", "express", "multer"],
     "baseUrl": ".",
-    "paths": {
-      "*": ["node_modules/*"]
-    }
+    "declaration": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist"]
 }
