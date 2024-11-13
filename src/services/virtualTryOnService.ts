@@ -1,6 +1,6 @@
 import { Client } from '@gradio/client';
-import { ClientOptions } from '../types/gradioTypes.js';
-import { TryOnResponse } from '../types/virtualTryOnTypes.js';
+import { ClientOptions } from '../types/gradioTypes';
+import { TryOnResponse } from '../types/virtualTryOnTypes';
 
 export class VirtualTryOnService {
   private client: any = null;

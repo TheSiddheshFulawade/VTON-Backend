@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { VirtualTryOnService } from "../services/virtualTryOnService.js";
+import { VirtualTryOnService } from "../services/virtualTryOnService";
 
 export class VirtualTryOnController {
   private tryOnService: VirtualTryOnService;

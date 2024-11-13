@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { VirtualTryOnController } from '../controllers/virtualTryOnController.js';
+import { VirtualTryOnController } from '../controllers/virtualTryOnController';
 
 const router = Router();
 const upload = multer();
