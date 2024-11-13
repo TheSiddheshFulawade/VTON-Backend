@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "start": "node --experimental-specifier-resolution=node dist/server.js",
+    "build": "tsc && cp package.json dist/",
+    "start": "node dist/server.js",
     "dev": "nodemon --exec ts-node --esm src/server.ts"
   },
   "dependencies": {

@@ -2,7 +2,9 @@ services:
   - type: web
     name: virtual-tryon-backend
     env: node
-    buildCommand: npm install && npm run build
+    buildCommand: |
+      npm install
+      npm run build
     startCommand: npm start
     nodeVersion: 18.x
     envVars:
