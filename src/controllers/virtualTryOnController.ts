@@ -8,7 +8,7 @@ export class VirtualTryOnController {
     useAutoMask: true,
     enhanceResult: true,
     defaultDenoisingSteps: 20,
-    defaultSeed: 42
+    defaultSeed: 42,
   };
 
   constructor() {
@@ -16,16 +16,30 @@ export class VirtualTryOnController {
   }
 
   async initialize(): Promise<void> {
-    await this.tryOnService.initialize();
+    try {
+      console.log("Starting Virtual Try-On service initialization...");
+      await this.tryOnService.initialize();
+      console.log(
+        "Virtual Try-On service initialization completed successfully"
+      );
+    } catch (error) {
+      console.error("Failed to initialize Virtual Try-On service:", error);
+      throw error;
+    }
   }
 
   generateTryOn = async (req: Request, res: Response): Promise<void> => {
     try {
       // Validate required files
-      if (!req.files || !("humanImage" in req.files) || !("garmentImage" in req.files)) {
-        res.status(400).json({ 
+      if (
+        !req.files ||
+        !("humanImage" in req.files) ||
+        !("garmentImage" in req.files)
+      ) {
+        res.status(400).json({
           success: false,
-          error: "Missing required files: humanImage and garmentImage are required" 
+          error:
+            "Missing required files: humanImage and garmentImage are required",
         });
         return;
       }
@@ -34,27 +48,27 @@ export class VirtualTryOnController {
       const garmentImageFile = req.files.garmentImage as Express.Multer.File[];
 
       if (!humanImageFile[0] || !garmentImageFile[0]) {
-        res.status(400).json({ 
+        res.status(400).json({
           success: false,
-          error: "Invalid file uploads" 
+          error: "Invalid file uploads",
         });
         return;
       }
 
       // Parse optional parameters with defaults
-      const denoisingSteps = req.body.denoisingSteps ? 
-        parseInt(req.body.denoisingSteps) : 
-        this.DEFAULT_CONFIG.defaultDenoisingSteps;
+      const denoisingSteps = req.body.denoisingSteps
+        ? parseInt(req.body.denoisingSteps)
+        : this.DEFAULT_CONFIG.defaultDenoisingSteps;
 
-      const seed = req.body.seed ? 
-        parseInt(req.body.seed) : 
-        this.DEFAULT_CONFIG.defaultSeed;
+      const seed = req.body.seed
+        ? parseInt(req.body.seed)
+        : this.DEFAULT_CONFIG.defaultSeed;
 
       // Validate numeric parameters
       if (isNaN(denoisingSteps) || isNaN(seed)) {
         res.status(400).json({
           success: false,
-          error: "denoisingSteps and seed must be valid numbers"
+          error: "denoisingSteps and seed must be valid numbers",
         });
         return;
       }
@@ -72,13 +86,13 @@ export class VirtualTryOnController {
 
       res.json({
         success: true,
-        data: result
+        data: result,
       });
     } catch (error) {
       console.error("Error in generateTryOn:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         success: false,
-        error: error instanceof Error ? error.message : "Internal server error"
+        error: error instanceof Error ? error.message : "Internal server error",
       });
     }
   };
