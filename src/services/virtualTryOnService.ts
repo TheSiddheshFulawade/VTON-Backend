@@ -1,4 +1,4 @@
-import { Client } from '@gradio/client';
+import { client } from '@gradio/client';
 import { ClientOptions } from '../types/gradioTypes';
 import { TryOnResponse } from '../types/virtualTryOnTypes';
 
@@ -19,7 +19,7 @@ export class VirtualTryOnService {
 
   async initialize(): Promise<void> {
     try {
-      this.client = await Client.connect("yisol/IDM-VTON", this.options);
+      this.client = await client("yisol/IDM-VTON", this.options);
       console.log("Successfully connected to IDM-VTON API");
     } catch (error) {
       console.error("Failed to connect to IDM-VTON API:", error);
@@ -90,7 +90,7 @@ export class VirtualTryOnService {
 
       console.log("Step 6: Making API request");
       const result = await this.client.predict(
-        2,  // Changed from "/tryon" to 2 as it might be the fn_index
+        2,  // fn_index for the try-on endpoint
         [
           imageEditorInput,
           garmentBlob,
