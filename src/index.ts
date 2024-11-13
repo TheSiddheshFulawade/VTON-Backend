@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import virtualTryOnRoutes from './routes/virtualTryOnRoutes.js';
+import virtualTryOnRoutes from './routes/virtualTryOnRoutes';
 
 const app = express();
 

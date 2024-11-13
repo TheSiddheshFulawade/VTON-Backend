@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { VirtualTryOnService } from "../services/virtualTryOnService";
+import { VirtualTryOnService } from "../services/virtualTryOnService.js";
 
 export class VirtualTryOnController {
   private tryOnService: VirtualTryOnService;
@@ -41,7 +41,7 @@ export class VirtualTryOnController {
         return;
       }
 
-      // optional parameters
+      // Parse optional parameters with defaults
       const denoisingSteps = req.body.denoisingSteps ? 
         parseInt(req.body.denoisingSteps) : 
         this.DEFAULT_CONFIG.defaultDenoisingSteps;
@@ -50,7 +50,7 @@ export class VirtualTryOnController {
         parseInt(req.body.seed) : 
         this.DEFAULT_CONFIG.defaultSeed;
 
-      // validate numeric parameters
+      // Validate numeric parameters
       if (isNaN(denoisingSteps) || isNaN(seed)) {
         res.status(400).json({
           success: false,
@@ -59,7 +59,7 @@ export class VirtualTryOnController {
         return;
       }
 
-      // default configuration
+      // Call service with default configuration
       const result = await this.tryOnService.generateTryOn({
         humanImage: humanImageFile[0].buffer,
         garmentImage: garmentImageFile[0].buffer,
