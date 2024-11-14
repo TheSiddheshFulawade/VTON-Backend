@@ -15,18 +15,18 @@ export class VirtualTryOnController {
     this.tryOnService = new VirtualTryOnService();
   }
 
-  async initialize(): Promise<void> {
-    try {
-      console.log("Starting Virtual Try-On service initialization...");
-      await this.tryOnService.initialize();
-      console.log(
-        "Virtual Try-On service initialization completed successfully"
-      );
-    } catch (error) {
-      console.error("Failed to initialize Virtual Try-On service:", error);
-      throw error;
-    }
-  }
+  // async initialize(): Promise<void> {
+  //   try {
+  //     console.log("Starting Virtual Try-On service initialization...");
+  //     await this.tryOnService.initialize();
+  //     console.log(
+  //       "Virtual Try-On service initialization completed successfully"
+  //     );
+  //   } catch (error) {
+  //     console.error("Failed to initialize Virtual Try-On service:", error);
+  //     throw error;
+  //   }
+  // }
 
   generateTryOn = async (req: Request, res: Response): Promise<void> => {
     try {

@@ -36,7 +36,7 @@ const initializeController = async () => {
   console.log(`Starting initialization attempt ${initializationState.attempts}/${initializationState.maxAttempts}`);
 
   try {
-    await controller.initialize();
+    // await controller.initialize();
     initializationState.isInitialized = true;
     initializationState.error = null;
     console.log('Virtual Try-On service initialized successfully');
