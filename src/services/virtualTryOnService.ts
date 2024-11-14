@@ -6,7 +6,7 @@ export class VirtualTryOnService {
   private client: any = null;
   private options: ClientOptions;
   private initializationRetries = 3;
-  private retryDelay = 5000; // 5 seconds
+  private retryDelay = 30000; // 20 seconds
 
   constructor(hfToken: string | null = null) {
     console.log("VirtualTryOnService: Constructor called");
