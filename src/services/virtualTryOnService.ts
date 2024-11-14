@@ -1,6 +1,6 @@
-import { client } from '@gradio/client';
-import { ClientOptions } from '../types/gradioTypes.js';
-import { TryOnResponse } from '../types/virtualTryOnTypes.js';
+import { client } from "@gradio/client";
+import { ClientOptions } from "../types/gradioTypes.js";
+import { TryOnResponse } from "../types/virtualTryOnTypes.js";
 
 export class VirtualTryOnService {
   private client: any = null;
@@ -9,42 +9,106 @@ export class VirtualTryOnService {
   private retryDelay = 5000; // 5 seconds
 
   constructor(hfToken: string | null = null) {
+    console.log("VirtualTryOnService: Constructor called");
     if (hfToken) {
-      if (!hfToken.startsWith('hf_')) {
+      if (!hfToken.startsWith("hf_")) {
         throw new Error('Hugging Face token must start with "hf_"');
       }
-      this.options = { 
+      this.options = {
         hf_token: hfToken as `hf_${string}`,
-        timeout: 60000 // default timeout
+        timeout: 120000, // increased timeout to 2 minutes
+        logging: true,
       };
     } else {
       this.options = {
-        timeout: 60000 // default timeout
+        timeout: 120000,
+        logging: true,
       };
     }
+    console.log("VirtualTryOnService: Constructor completed with options:", {
+      ...this.options,
+      hf_token: this.options.hf_token ? "[REDACTED]" : undefined,
+    });
   }
 
   async initialize(): Promise<void> {
     let lastError: Error | null = null;
-    
+
     for (let attempt = 1; attempt <= this.initializationRetries; attempt++) {
       try {
-        console.log(`Initialization attempt ${attempt}/${this.initializationRetries}`);
+        console.log(
+          `VirtualTryOnService: Initialization attempt ${attempt}/${this.initializationRetries}`
+        );
+        console.log(
+          "VirtualTryOnService: Attempting to connect to Gradio client..."
+        );
+
+        // Add memory usage logging
+        const used = process.memoryUsage();
+        console.log("Memory usage before client initialization:", {
+          heapTotal: `${Math.round(used.heapTotal / 1024 / 1024)}MB`,
+          heapUsed: `${Math.round(used.heapUsed / 1024 / 1024)}MB`,
+          rss: `${Math.round(used.rss / 1024 / 1024)}MB`,
+        });
+
         this.client = await client("yisol/IDM-VTON", this.options);
-        console.log("Successfully connected to IDM-VTON API");
+
+        console.log(
+          "VirtualTryOnService: Successfully connected to IDM-VTON API"
+        );
+
+        // Verify client connection
+        if (!this.client) {
+          throw new Error(
+            "Client connection succeeded but client object is null"
+          );
+        }
+
+        // Basic client verification (checking if it's an object with expected properties)
+        if (typeof this.client.predict !== "function") {
+          throw new Error(
+            "Client initialized but predict method is not available"
+          );
+        }
+
+        console.log(
+          "VirtualTryOnService: Client verification completed successfully"
+        );
         return;
       } catch (error) {
         lastError = error as Error;
-        console.error(`Initialization attempt ${attempt} failed:`, error);
-        
+        console.error("VirtualTryOnService: Initialization attempt failed:", {
+          attempt,
+          errorMessage: error instanceof Error ? error.message : String(error),
+          errorStack: error instanceof Error ? error.stack : undefined,
+          timestamp: new Date().toISOString(),
+        });
+
         if (attempt < this.initializationRetries) {
-          console.log(`Retrying in ${this.retryDelay/1000} seconds...`);
-          await new Promise(resolve => setTimeout(resolve, this.retryDelay));
+          console.log(
+            `VirtualTryOnService: Retrying in ${
+              this.retryDelay / 1000
+            } seconds...`
+          );
+          await new Promise((resolve) => setTimeout(resolve, this.retryDelay));
         }
       }
     }
 
-    throw new Error(`Failed to initialize after ${this.initializationRetries} attempts. Last error: ${lastError?.message}`);
+    const finalError = new Error(
+      `Failed to initialize after ${this.initializationRetries} attempts. Last error: ${lastError?.message}`
+    );
+    console.error("VirtualTryOnService: Initialization finally failed:", {
+      error: finalError.message,
+      stack: finalError.stack,
+      lastError: lastError?.message,
+      timestamp: new Date().toISOString(),
+    });
+    throw finalError;
+  }
+
+  isInitialized(): boolean {
+    return this.client !== null && typeof this.client.predict === "function";
   }
 
   private validateParameters(denoisingSteps: number, seed: number): void {
