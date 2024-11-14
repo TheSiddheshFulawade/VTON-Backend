@@ -5,26 +5,46 @@ import { TryOnResponse } from '../types/virtualTryOnTypes.js';
 export class VirtualTryOnService {
   private client: any = null;
   private options: ClientOptions;
+  private initializationRetries = 3;
+  private retryDelay = 5000; // 5 seconds
 
   constructor(hfToken: string | null = null) {
     if (hfToken) {
       if (!hfToken.startsWith('hf_')) {
         throw new Error('Hugging Face token must start with "hf_"');
       }
-      this.options = { hf_token: hfToken as `hf_${string}` };
+      this.options = { 
+        hf_token: hfToken as `hf_${string}`,
+        timeout: 60000 // default timeout
+      };
     } else {
-      this.options = {};
+      this.options = {
+        timeout: 60000 // default timeout
+      };
     }
   }
 
   async initialize(): Promise<void> {
-    try {
-      this.client = await client("yisol/IDM-VTON", this.options);
-      console.log("Successfully connected to IDM-VTON API");
-    } catch (error) {
-      console.error("Failed to connect to IDM-VTON API:", error);
-      throw error;
+    let lastError: Error | null = null;
+    
+    for (let attempt = 1; attempt <= this.initializationRetries; attempt++) {
+      try {
+        console.log(`Initialization attempt ${attempt}/${this.initializationRetries}`);
+        this.client = await client("yisol/IDM-VTON", this.options);
+        console.log("Successfully connected to IDM-VTON API");
+        return;
+      } catch (error) {
+        lastError = error as Error;
+        console.error(`Initialization attempt ${attempt} failed:`, error);
+        
+        if (attempt < this.initializationRetries) {
+          console.log(`Retrying in ${this.retryDelay/1000} seconds...`);
+          await new Promise(resolve => setTimeout(resolve, this.retryDelay));
+        }
+      }
     }
+
+    throw new Error(`Failed to initialize after ${this.initializationRetries} attempts. Last error: ${lastError?.message}`);
   }
 
   private validateParameters(denoisingSteps: number, seed: number): void {
@@ -37,7 +57,7 @@ export class VirtualTryOnService {
   }
 
   private async bufferToBase64(buffer: Buffer): Promise<string> {
-    return `data:image/jpeg;base64,${buffer.toString('base64')}`;
+    return `data:image/jpeg;base64,${buffer.toString("base64")}`;
   }
 
   async generateTryOn({
@@ -47,7 +67,7 @@ export class VirtualTryOnService {
     useAutoMask = true,
     enhanceResult = true,
     denoisingSteps = 20,
-    seed = 42
+    seed = 42,
   }: {
     humanImage: Buffer;
     garmentImage: Buffer;
@@ -58,7 +78,9 @@ export class VirtualTryOnService {
     seed?: number;
   }): Promise<TryOnResponse> {
     if (!this.client) {
-      throw new Error("Client not initialized. Please call initialize() first.");
+      throw new Error(
+        "Client not initialized. Please call initialize() first."
+      );
     }
 
     try {
@@ -71,21 +93,21 @@ export class VirtualTryOnService {
       const garmentDataUrl = await this.bufferToBase64(garmentImage);
 
       console.log("Step 4: Converting to blobs");
-      const humanBlob = await fetch(humanDataUrl).then(r => r.blob());
-      const garmentBlob = await fetch(garmentDataUrl).then(r => r.blob());
+      const humanBlob = await fetch(humanDataUrl).then((r) => r.blob());
+      const garmentBlob = await fetch(garmentDataUrl).then((r) => r.blob());
 
       console.log("Step 5: Preparing request parameters", {
         message,
         useAutoMask,
         enhanceResult,
         denoisingSteps,
-        seed
+        seed,
       });
 
       const imageEditorInput = {
         background: humanBlob,
         layers: [],
-        composite: null
+        composite: null,
       };
 
       console.log("Step 6: Making API request");
@@ -98,30 +120,38 @@ export class VirtualTryOnService {
           useAutoMask,
           enhanceResult,
           denoisingSteps,
-          seed
+          seed,
         ],
         {
           batched: false,
-          timeout: 300000 // 5 minute timeout
+          timeout: 300000, // 5 minute timeout
         }
       );
 
       console.log("Step 7: Processing response", result);
 
-      if (!result.data || !Array.isArray(result.data) || result.data.length < 2) {
-        throw new Error(`Invalid response from IDM-VTON API: ${JSON.stringify(result)}`);
+      if (
+        !result.data ||
+        !Array.isArray(result.data) ||
+        result.data.length < 2
+      ) {
+        throw new Error(
+          `Invalid response from IDM-VTON API: ${JSON.stringify(result)}`
+        );
       }
 
       return {
         generatedImage: result.data[0],
-        maskedImage: result.data[1]
+        maskedImage: result.data[1],
       };
     } catch (error) {
       console.error("Detailed error in generateTryOn:", error);
       if (error instanceof Error) {
         throw new Error(`Virtual try-on generation failed: ${error.message}`);
       } else {
-        throw new Error(`Virtual try-on generation failed: ${JSON.stringify(error)}`);
+        throw new Error(
+          `Virtual try-on generation failed: ${JSON.stringify(error)}`
+        );
       }
     }
   }
