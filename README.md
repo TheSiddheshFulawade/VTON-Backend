@@ -1,0 +1,1 @@
+Sandarshan is an AI-powered security and surveillance system designed to enhance workplace security. It integrates with existing CCTV infrastructure to monitor, identify, and report unauthorized access in real-time. Sandarshan also automates attendance logging, eliminating the need for physical ID cards and manual processes.
